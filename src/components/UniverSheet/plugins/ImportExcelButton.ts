@@ -11,25 +11,14 @@ import {
   ICommandService,
   IUniverInstanceService,
   Plugin,
-  Workbook,
 } from "@univerjs/core";
 import { SetRangeValuesCommand } from "@univerjs/sheets";
 import { IAccessor, Inject, Injector } from "@wendellhu/redi";
 import { FolderSingle } from '@univerjs/icons';
 import * as XLSX from 'xlsx';
-import { useState } from 'react';
-
-
-interface President {
-  id: string;
-  saleNum: number;
-}
-
-/* the component state is an array of presidents */
-// const [pres, setPres] = useState<President[]>([]);
 
 const waitUserSelectExcelFile = (
-  onSelect: (workbook: Workbook) => void,
+  onSelect: (workbook: XLSX.WorkBook) => void,
 ) => {
   const input = document.createElement("input");
   input.type = "file";
@@ -40,7 +29,6 @@ const waitUserSelectExcelFile = (
   input.onchange = () => {
     const file = input.files?.[0];
     if (!file) return;
-    console.log(file)
     const reader = new FileReader();
 
     // reader.onload = () => {
@@ -61,19 +49,20 @@ const waitUserSelectExcelFile = (
     // };
     reader.readAsArrayBuffer(file);
     reader.onload = () => {
-      const data = new Uint8Array(reader.result);
-      const workbook = XLSX.read(data, { type: 'array' });
-      console.log(workbook);
+      if (reader.result instanceof ArrayBuffer) {
+        const data = new Uint8Array(reader.result);
+        const workbook = XLSX.read(data, { type: 'array' });
 
-      // 获取第一个工作表的名称
-      const firstSheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[firstSheetName];
-
-      // 将工作表转换为 JSON 格式
-      const excelData = XLSX.utils.sheet_to_json(worksheet);
-      console.log(excelData);
-      onSelect(workbook);
+        if (workbook.SheetNames.length > 0) {
+          onSelect(workbook);
+        } else {
+          console.error('Workbook does not contain any sheets.');
+        }
+      } else {
+        console.error('Reader result is not an ArrayBuffer.');
+      }
     };
+
   };
 };
 
@@ -91,9 +80,6 @@ const parseExcelUniverData = (excel: string[][]): ICellData[][] => {
     });
   });
 };
-function isBinary(str: any) {
-  return /^[01]+$/.test(str);
-}
 
 
 /**
@@ -140,28 +126,45 @@ class ImportExcelButtonPlugin extends Plugin {
         // get current sheet
         const sheet = univer.getCurrentUniverSheetInstance().getActiveSheet();
         // wait user select excel file
-        waitUserSelectExcelFile((workbook) => {
-          const sheetNames = workbook.getSheetsName()
-          const sheets = workbook.getSheets()
-          const firstName = sheetNames[0]
-          const firstSheet = sheets[0]
+        waitUserSelectExcelFile((workbook: XLSX.WorkBook) => {
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
           // 将工作表转换为 JSON 格式
-          const excelData = XLSX.utils.sheet_to_json(firstSheet);
-          console.log(firstSheet);
-          console.log(excelData);
+          // const excelData = XLSX.utils.sheet_to_json(worksheet, { blankrows: true });
+          // 将工作表转换为 JSON 格式，并获取标题行和数据
+          const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+
+          // 获取列数（以第一行为准）
+          const numColumns: number = jsonData[0].length;
+
+          // 初始化二维字符串数组
+          const twoDimensionalArray: string[][] = [];
+
+          // 遍历一维数组，并将每个元素转换为包含单个字符串的数组，并填充到二维字符串数组中
+          jsonData.forEach(row => {
+            const newRow: string[] = [];
+            for (let i = 0; i < numColumns; i++) {
+              newRow.push(String(row[i] || '')); // 如果元素为null或undefined，则用空字符串替代
+            }
+            twoDimensionalArray.push(newRow);
+          });
+
+          console.log(twoDimensionalArray);
           // set sheet size
-          // sheet.setColumnCount(colsCount);
-          // sheet.setRowCount(rowsCount);
+          sheet.setColumnCount(2);
+          sheet.setRowCount(jsonData.length);
+
 
           // set sheet data
           commandService.executeCommand(SetRangeValuesCommand.id, {
             range: {
-              // startColumn: 0, // start column index
-              // startRow: 0, // start row index
-              // endColumn: colsCount - 1, // end column index
-              // endRow: rowsCount - 1, // end row index
+              startColumn: 0, // start column index
+              startRow: 0, // start row index
+              endColumn: 2, // end column index
+              endRow: 11, // end row index
             },
-            // value: parseExcelUniverData(data),
+            value: parseExcelUniverData(twoDimensionalArray),
           });
         });
         return true;
