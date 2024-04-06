@@ -140,20 +140,28 @@ class ImportExcelButtonPlugin extends Plugin {
         // get current sheet
         const sheet = univer.getCurrentUniverSheetInstance().getActiveSheet();
         // wait user select excel file
-        waitUserSelectExcelFile(({ data, rowsCount, colsCount }) => {
+        waitUserSelectExcelFile((workbook) => {
+          const sheetNames = workbook.getSheetsName()
+          const sheets = workbook.getSheets()
+          const firstName = sheetNames[0]
+          const firstSheet = sheets[0]
+          // 将工作表转换为 JSON 格式
+          const excelData = XLSX.utils.sheet_to_json(firstSheet);
+          console.log(firstSheet);
+          console.log(excelData);
           // set sheet size
-          sheet.setColumnCount(colsCount);
-          sheet.setRowCount(rowsCount);
+          // sheet.setColumnCount(colsCount);
+          // sheet.setRowCount(rowsCount);
 
           // set sheet data
           commandService.executeCommand(SetRangeValuesCommand.id, {
             range: {
-              startColumn: 0, // start column index
-              startRow: 0, // start row index
-              endColumn: colsCount - 1, // end column index
-              endRow: rowsCount - 1, // end row index
+              // startColumn: 0, // start column index
+              // startRow: 0, // start row index
+              // endColumn: colsCount - 1, // end column index
+              // endRow: rowsCount - 1, // end row index
             },
-            value: parseExcelUniverData(data),
+            // value: parseExcelUniverData(data),
           });
         });
         return true;
