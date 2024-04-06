@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import UniverSheet from './components/UniverSheet';
-import MyPieChart from './components/EChart'
+// import MyPieChart from './components/EChart'
 import { MY_DATA } from './assets/my-data';
 
 function App() {
@@ -10,7 +10,7 @@ function App() {
   return (
     <div id="root">
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <div className="bar">
+        {/* <div className="bar">
           <button
             onClick={() => {
               console.log(univerRef.current?.getData());
@@ -18,9 +18,9 @@ function App() {
           >
             Get Data
           </button>
-        </div>
+        </div> */}
         <UniverSheet style={{ flex: 1 }} ref={univerRef} data={data} />
-        <MyPieChart />
+        {/* <MyPieChart /> */}
       </div>
     </div>
   );

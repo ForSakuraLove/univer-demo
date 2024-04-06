@@ -17,6 +17,7 @@ import { UniverUIPlugin } from '@univerjs/ui';
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import { FUniver } from "@univerjs/facade";
 import * as XLSX from 'xlsx';
+import  ImportExcelButtonPlugin  from './plugins/ImportExcelButton';
 
 // eslint-disable-next-line react/display-name
 const UniverSheet = forwardRef(({ data }, ref) => {
@@ -61,6 +62,7 @@ const UniverSheet = forwardRef(({ data }, ref) => {
     univer.registerPlugin(UniverSheetsPlugin);
     univer.registerPlugin(UniverSheetsUIPlugin);
     univer.registerPlugin(UniverSheetsFormulaPlugin);
+    univer.registerPlugin(ImportExcelButtonPlugin);
 
     // create workbook instance
     workbookRef.current = univer.createUniverSheet(data);
@@ -87,11 +89,11 @@ const UniverSheet = forwardRef(({ data }, ref) => {
       }
     });
     console.log(jsonArray);
-    
-    const worksheet = XLSX.utils.json_to_sheet(jsonArray);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Dates");
-    XLSX.writeFile(workbook, "Presidents" + new Date() + ".xlsx", { compression: true });
+
+    // const worksheet = XLSX.utils.json_to_sheet(jsonArray);
+    // const workbook = XLSX.utils.book_new();
+    // XLSX.utils.book_append_sheet(workbook, worksheet, "Dates");
+    // XLSX.writeFile(workbook, "Presidents" + new Date() + ".xlsx", { compression: true });
   };
 
   /**
