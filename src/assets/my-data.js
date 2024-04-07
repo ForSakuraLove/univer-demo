@@ -23,12 +23,12 @@ export const MY_DATA = {
   id: 'workbook-01',
   locale: LocaleType.ZH_CN,
   name: 'universheet',
-  sheetOrder: ['sheet-01', 'sheet-02', 'sheet-03'],
+  // sheetOrder: ['sheet-01', 'sheet-02', 'sheet-03'],
   appVersion: '3.0.0-alpha',
   sheets: {
-    'sheet-01': {
+    'sheet-04': {
       type: SheetTypes.GRID,
-      id: 'sheet-01',
+      id: 'sheet-04',
       cellData: {
         0: {
           0: {

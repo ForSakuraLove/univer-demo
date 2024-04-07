@@ -3,8 +3,13 @@ import '@univerjs/ui/lib/index.css';
 import '@univerjs/sheets-ui/lib/index.css';
 import '@univerjs/sheets-formula/lib/index.css';
 import './index.css';
+import { DEFAULT_WORKBOOK_DATA } from '../../assets/default-workbook-data';
 
-import { Univer } from '@univerjs/core';
+import {
+  Univer,
+  // IWorkbookData ,
+  // IWorksheetData
+} from "@univerjs/core";
 import { defaultTheme } from '@univerjs/design';
 import { UniverDocsPlugin } from '@univerjs/docs';
 import { UniverDocsUIPlugin } from '@univerjs/docs-ui';
@@ -14,16 +19,17 @@ import { UniverSheetsPlugin } from '@univerjs/sheets';
 import { UniverSheetsFormulaPlugin } from '@univerjs/sheets-formula';
 import { UniverSheetsUIPlugin } from '@univerjs/sheets-ui';
 import { UniverUIPlugin } from '@univerjs/ui';
-import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { FUniver } from "@univerjs/facade";
 import * as XLSX from 'xlsx';
-import  ImportExcelButtonPlugin  from './plugins/ImportExcelButton';
+import ImportExcelButtonPlugin from '../../plugins/ImportExcelButton';
 
 // eslint-disable-next-line react/display-name
 const UniverSheet = forwardRef(({ data }, ref) => {
   const univerRef = useRef(null);
   const workbookRef = useRef(null);
   const containerRef = useRef(null);
+  // const [isFlash,setIsFlash] = useState<Boolean>(false)
 
   useImperativeHandle(ref, () => ({
     getData,
@@ -33,7 +39,7 @@ const UniverSheet = forwardRef(({ data }, ref) => {
    * Initialize univer instance and workbook instance
    * @param data {IWorkbookData} document see https://univer.work/api/core/interfaces/IWorkbookData.html
    */
-  const init = (data = {}) => {
+  const init = () => {
     if (!containerRef.current) {
       throw Error('container not initialized');
     }
@@ -66,7 +72,7 @@ const UniverSheet = forwardRef(({ data }, ref) => {
 
     // create workbook instance
     workbookRef.current = univer.createUniverSheet(data);
-
+    console.log('--------------------------------------------------------')
     const univerAPI = FUniver.newAPI(univer);
     const activeSheet = univerAPI.getActiveWorkbook().getActiveSheet();
     const range = activeSheet.getRange(0, 0, 7, 2);
@@ -116,11 +122,12 @@ const UniverSheet = forwardRef(({ data }, ref) => {
   };
 
   useEffect(() => {
-    init(data);
+    console.log('init 开始')
+    init();
     return () => {
       destroyUniver();
     };
-  }, [data]);
+  });
 
   return <div ref={containerRef} className="univer-container" />;
 });
