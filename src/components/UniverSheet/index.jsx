@@ -16,9 +16,8 @@ import { UniverSheetsFormulaPlugin } from '@univerjs/sheets-formula';
 import { UniverSheetsUIPlugin } from '@univerjs/sheets-ui';
 import { UniverUIPlugin } from '@univerjs/ui';
 import { forwardRef, useEffect, useRef, useState } from 'react';
-import { FUniver } from "@univerjs/facade";
-import * as XLSX from 'xlsx';
 import ImportExcelButtonPlugin from '../../plugins/ImportExcelButton';
+import ExportExcelButtonPlugin from '../../plugins/ExportExcelButton';
 import { MY_DATA } from '../../assets/my-data'
 
 
@@ -73,36 +72,9 @@ const UniverSheet = forwardRef(() => {
     univer.registerPlugin(UniverSheetsUIPlugin);
     univer.registerPlugin(UniverSheetsFormulaPlugin);
     univer.registerPlugin(ImportExcelButtonPlugin);
-
+    univer.registerPlugin(ExportExcelButtonPlugin);
     // create workbook instance
     workbookRef.current = univer.createUniverSheet(univeData);
-    const univerAPI = FUniver.newAPI(univer);
-    const activeSheet = univerAPI.getActiveWorkbook().getActiveSheet();
-    const range = activeSheet.getRange(0, 0, 7, 2);
-
-
-    var jsonArray = [];
-    var keys = [];
-    var currentObj = {};
-    range.forEach((row, column, cell) => {
-      if (row === 0) {
-        keys.push(cell.v);
-      } else {
-        if (column === 0) {
-          currentObj[keys[column]] = cell.v;
-        } else if (column === 1) {
-          currentObj[keys[column]] = cell.v;
-          jsonArray.push(currentObj);
-          currentObj = {};
-        }
-      }
-    });
-    console.log(jsonArray);
-
-    // const worksheet = XLSX.utils.json_to_sheet(jsonArray);
-    // const workbook = XLSX.utils.book_new();
-    // XLSX.utils.book_append_sheet(workbook, worksheet, "Dates");
-    // XLSX.writeFile(workbook, "Presidents" + new Date() + ".xlsx", { compression: true });
   };
 
   /**
