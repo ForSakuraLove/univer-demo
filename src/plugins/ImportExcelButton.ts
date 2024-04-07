@@ -16,7 +16,7 @@ import {
   IColumnData,
   IWorksheetData,
   BooleanNumber,
-  SheetTypes,
+  // SheetTypes,
   IFreeze,
   IObjectMatrixPrimitiveType,
   IObjectArrayPrimitiveType,
@@ -177,6 +177,7 @@ const parseExcelUniverSheetInfo = (sheet: XLSX.WorkSheet, sheetName: string): IW
  * A simple Plugin example, show how to write a plugin.
  */
 class ImportExcelButtonPlugin extends Plugin {
+  private static onImportExcelCallback?: (data: any) => void;
   constructor(
     // inject injector, required
     @Inject(Injector) override readonly _injector: Injector,
@@ -189,7 +190,10 @@ class ImportExcelButtonPlugin extends Plugin {
   ) {
     super('import-excel-plugin') // plugin id
   }
-
+  // 接收函数回调
+  static setOnImportExcelCallback(callback: (data: any) => void) {
+    ImportExcelButtonPlugin.onImportExcelCallback = callback;
+  }
 
   /** Plugin onStarting lifecycle */
   onStarting() {
@@ -227,14 +231,13 @@ class ImportExcelButtonPlugin extends Plugin {
             univerWorkbook.addWorksheet(sheetName, sheetIndex, sheetInfo)
             sheetIndex++;
           });
-          commandService.executeCommand(SetRangeValuesCommand.id, {
-            range: {
-              startColumn: 0,  // start column index
-              startRow: 0, // start row index
-              endColumn: 100, // end column index
-              endRow: 100,  // end row index
-            },
-          });
+          const univeData = univerWorkbook.getSnapshot()
+          if (ImportExcelButtonPlugin.onImportExcelCallback) {
+            ImportExcelButtonPlugin.onImportExcelCallback(univeData);
+          } else {
+            console.error("onImportExcelCallback is not defined");
+          }
+          commandService.executeCommand(SetRangeValuesCommand.id, {});
         });
         return true;
       },

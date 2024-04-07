@@ -3,12 +3,8 @@ import '@univerjs/ui/lib/index.css';
 import '@univerjs/sheets-ui/lib/index.css';
 import '@univerjs/sheets-formula/lib/index.css';
 import './index.css';
-import { DEFAULT_WORKBOOK_DATA } from '../../assets/default-workbook-data';
-
 import {
   Univer,
-  // IWorkbookData ,
-  // IWorksheetData
 } from "@univerjs/core";
 import { defaultTheme } from '@univerjs/design';
 import { UniverDocsPlugin } from '@univerjs/docs';
@@ -19,21 +15,29 @@ import { UniverSheetsPlugin } from '@univerjs/sheets';
 import { UniverSheetsFormulaPlugin } from '@univerjs/sheets-formula';
 import { UniverSheetsUIPlugin } from '@univerjs/sheets-ui';
 import { UniverUIPlugin } from '@univerjs/ui';
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { forwardRef, useEffect, useRef, useState } from 'react';
 import { FUniver } from "@univerjs/facade";
 import * as XLSX from 'xlsx';
 import ImportExcelButtonPlugin from '../../plugins/ImportExcelButton';
+import { MY_DATA } from '../../assets/my-data'
+
 
 // eslint-disable-next-line react/display-name
-const UniverSheet = forwardRef(({ data }, ref) => {
+const UniverSheet = forwardRef(() => {
   const univerRef = useRef(null);
   const workbookRef = useRef(null);
   const containerRef = useRef(null);
-  // const [isFlash,setIsFlash] = useState<Boolean>(false)
+  const [univeData, setUniveData] = useState(MY_DATA);
 
-  useImperativeHandle(ref, () => ({
-    getData,
-  }));
+  const handleImportExcel = (data) => {
+    // 更新组件状态以触发刷新
+    setUniveData(data);
+  }
+
+  useEffect(() => {
+    // 在组件加载后设置回调函数
+    ImportExcelButtonPlugin.setOnImportExcelCallback(handleImportExcel);
+  }, []);
 
   /**
    * Initialize univer instance and workbook instance
@@ -71,8 +75,7 @@ const UniverSheet = forwardRef(({ data }, ref) => {
     univer.registerPlugin(ImportExcelButtonPlugin);
 
     // create workbook instance
-    workbookRef.current = univer.createUniverSheet(data);
-    console.log('--------------------------------------------------------')
+    workbookRef.current = univer.createUniverSheet(univeData);
     const univerAPI = FUniver.newAPI(univer);
     const activeSheet = univerAPI.getActiveWorkbook().getActiveSheet();
     const range = activeSheet.getRange(0, 0, 7, 2);
@@ -111,23 +114,12 @@ const UniverSheet = forwardRef(({ data }, ref) => {
     workbookRef.current = null;
   };
 
-  /**
-   * Get workbook data
-   */
-  const getData = () => {
-    if (!workbookRef.current) {
-      throw new Error('Workbook is not initialized');
-    }
-    return workbookRef.current.save();
-  };
-
   useEffect(() => {
-    console.log('init 开始')
     init();
     return () => {
       destroyUniver();
     };
-  });
+  }, [univeData]);
 
   return <div ref={containerRef} className="univer-container" />;
 });
