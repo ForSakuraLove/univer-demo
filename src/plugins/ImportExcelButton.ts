@@ -5,22 +5,7 @@ import {
   MenuItemType,
   MenuPosition,
 } from "@univerjs/ui";
-import {
-  CommandType,
-  ICellData,
-  ICommandService,
-  IUniverInstanceService,
-  Plugin,
-  IRange,
-  IRowData,
-  IColumnData,
-  IWorksheetData,
-  BooleanNumber,
-  // SheetTypes,
-  IFreeze,
-  IObjectMatrixPrimitiveType,
-  IObjectArrayPrimitiveType,
-} from "@univerjs/core";
+import * as UniverJS from "@univerjs/core";
 import { IAccessor, Inject, Injector } from "@wendellhu/redi";
 import { FolderSingle } from '@univerjs/icons';
 import * as ExcelJS from 'exceljs';
@@ -60,7 +45,7 @@ const waitUserSelectExcelFile = (
  * @returns An object containing information about the worksheet.
  */
 // const parseExcelUniverSheetInfo = (sheet: XLSX.WorkSheet, sheetName: string): IWorksheetData => {
-const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): IWorksheetData => {
+const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): UniverJS.IWorksheetData => {
   const sheetId = sheet.name;
   const name = sheet.name;
   // const type = SheetTypes.GRID;
@@ -71,23 +56,23 @@ const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): IWorksheetData => 
   const scrollTop = 200;
   const scrollLeft = 100;
   const selections = ['A2'];
-  const hidden = BooleanNumber.FALSE;
+  const hidden = UniverJS.BooleanNumber.FALSE;
   // const status = 1;
   const showGridlines = 1;
   const rowHeaderWidth = 46;
   const columnHeaderHeight = 20;
-  const rightToLeft = BooleanNumber.FALSE;
+  const rightToLeft = UniverJS.BooleanNumber.FALSE;
   const zoomRatio = 1
-  const freeze: IFreeze = {
+  const freeze: UniverJS.IFreeze = {
     xSplit: 0, // 水平方向分割的位置
     ySplit: 0, // 垂直方向分割的位置
     startRow: 0, // 冻结区域左上角单元格的行索引，设置为0表示从第一行开始冻结
     startColumn: 0, // 冻结区域左上角单元格的列索引
   };
-  const mergeDataBefore: IRange[] = []; // Merged cells
-  const cellData: IObjectMatrixPrimitiveType<ICellData> = {}; // Cell data
-  const rowData: IObjectArrayPrimitiveType<Partial<IRowData>> = {}; // Row data
-  const columnData: IObjectArrayPrimitiveType<Partial<IColumnData>> = {}; // Column data
+  const mergeDataBefore: UniverJS.IRange[] = []; // Merged cells
+  const cellData: UniverJS.IObjectMatrixPrimitiveType<UniverJS.ICellData> = {}; // Cell data
+  const rowData: UniverJS.IObjectArrayPrimitiveType<Partial<UniverJS.IRowData>> = {}; // Row data
+  const columnData: UniverJS.IObjectArrayPrimitiveType<Partial<UniverJS.IColumnData>> = {}; // Column data
   sheet.eachRow({ includeEmpty: true }, (row) => {
     row.eachCell({ includeEmpty: true }, (cell) => {
       if (cell.isMerged) {
@@ -104,7 +89,7 @@ const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): IWorksheetData => 
   });
 
   // 创建一个对象，以便根据起始行和列的组合查找合并范围
-  const mergedRangesMap: { [key: string]: IRange } = {};
+  const mergedRangesMap: { [key: string]: UniverJS.IRange } = {};
 
   // 遍历合并范围数组并整理数据
   mergeDataBefore.forEach(range => {
@@ -119,7 +104,7 @@ const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): IWorksheetData => 
   });
 
   // 将整理后的合并范围转换为数组
-  const mergeData: IRange[] = Object.values(mergedRangesMap);
+  const mergeData: UniverJS.IRange[] = Object.values(mergedRangesMap);
 
   for (let rowIndex = 1; rowIndex <= sheet.rowCount; rowIndex++) {
     const row = sheet.getRow(rowIndex)
@@ -128,12 +113,6 @@ const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): IWorksheetData => 
       cellData[rowIndex - 1] = cellData[rowIndex - 1] || {}
       rowData[rowIndex - 1] = rowData[rowIndex - 1] || {};
       columnData[colIndex - 1] = columnData[colIndex - 1] || {};
-      console.log(cell.$col$row+':')
-      if(cell.font){
-        if(cell.font.color){
-          cellData[rowIndex - 1][colIndex - 1]
-        }
-      }
       if (cell.value) {
         if (cell.isMerged && cell !== cell.master) {
           cellData[rowIndex - 1][colIndex - 1] = {};
@@ -150,9 +129,85 @@ const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): IWorksheetData => 
         rowData[rowIndex - 1][colIndex - 1] = {};
         columnData[colIndex - 1][rowIndex - 1] = {};
       }
+      //没有样式
+      if (cell.style && Object.keys(cell.style).length === 0) {
+        continue
+      }
+      let cellStyle: UniverJS.IStyleData = {}
+      console.log(cell.$col$row)
+      console.log(cell.style)
+
+
+      // 文本旋转样式
+      const csat = cell.style.alignment?.textRotation
+      let cellStyleTextRotation: UniverJS.ITextRotation = { a: 0, v: 0 };
+      if (csat) {
+        if (csat === 'vertical') {
+          cellStyleTextRotation.v = 1;
+        } else {
+          cellStyleTextRotation.a = -csat;
+        }
+      }
+
+      // 读取方向
+      let cellStyleTextDirection: UniverJS.TextDirection = 0
+      const csar = cell.style.alignment?.readingOrder
+      if (csar) {
+        if (csar === 'ltr') {
+          cellStyleTextDirection = 1;
+        } else {
+          cellStyleTextDirection = 2;
+        }
+      }
+
+      //文本折行策略
+      let cellStyleWrapStrategy: UniverJS.WrapStrategy = 0
+      const csaw = cell.style.alignment?.wrapText
+      if (csaw) {
+        if (csaw) {
+          cellStyleWrapStrategy = 3;
+        }
+      }
+
+      //水平对齐方式
+      let cellStyleHorizontalAlign: UniverJS.HorizontalAlign = 0
+      const csah = cell.style.alignment?.horizontal
+      if (csah) {
+        if (csah === 'left') {
+          cellStyleHorizontalAlign = 1;
+        } else if (csah === 'center') {
+          cellStyleHorizontalAlign = 2;
+        } else if (csah === 'right') {
+          cellStyleHorizontalAlign = 3;
+        } else if (csah === 'justify') {
+          cellStyleHorizontalAlign = 4;
+        } else if (csah === 'fill'){
+          cellStyleWrapStrategy = 2
+        }
+      }
+
+      //垂直对齐方式
+      let cellStyleVerticalAlign: UniverJS.VerticalAlign = 0
+
+      const csav = cell.style.alignment?.vertical
+      if (csav) {
+        if (csav === 'top') {
+          cellStyleVerticalAlign = 1;
+        } else if (csav === 'middle') {
+          cellStyleVerticalAlign = 2;
+        } else if (csav === 'bottom') {
+          cellStyleVerticalAlign = 3;
+        }
+      }
+
+      cellStyle.tr = cellStyleTextRotation
+      cellStyle.td = cellStyleTextDirection
+      cellStyle.ht = cellStyleHorizontalAlign
+      cellStyle.vt = cellStyleVerticalAlign
+      cellData[rowIndex - 1][colIndex - 1].s = cellStyle
     }
   }
-  const sheetData: IWorksheetData = {
+  const sheetData: UniverJS.IWorksheetData = {
     /**
    * Id of the worksheet. This should be unique and immutable across the lifecycle of the worksheet.
    */
@@ -204,7 +259,7 @@ const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): IWorksheetData => 
  * Import Excel Button Plugin
  * A simple Plugin example, show how to write a plugin.
  */
-class ImportExcelButtonPlugin extends Plugin {
+class ImportExcelButtonPlugin extends UniverJS.Plugin {
   private static onImportExcelCallback?: (data: any) => void;
   constructor(
     // inject injector, required
@@ -212,7 +267,7 @@ class ImportExcelButtonPlugin extends Plugin {
     // inject menu service, to add toolbar button
     @Inject(IMenuService) private menuService: IMenuService,
     // inject command service, to register command handler
-    @Inject(ICommandService) private readonly commandService: ICommandService,
+    @Inject(UniverJS.ICommandService) private readonly commandService: UniverJS.ICommandService,
     // inject component manager, to register icon component
     @Inject(ComponentManager) private readonly componentManager: ComponentManager,
   ) {
@@ -239,11 +294,11 @@ class ImportExcelButtonPlugin extends Plugin {
     this.menuService.addMenuItem(menuItem);
 
     const command = {
-      type: CommandType.OPERATION,
+      type: UniverJS.CommandType.OPERATION,
       id: buttonId,
       handler: (accessor: IAccessor) => {
         // inject univer instance service
-        const univer = accessor.get(IUniverInstanceService);
+        const univer = accessor.get(UniverJS.IUniverInstanceService);
         const univerWorkbook = univer.getCurrentUniverSheetInstance()
         const sheetMap = univerWorkbook.getWorksheets()
         sheetMap.forEach(sheet => {
@@ -252,7 +307,7 @@ class ImportExcelButtonPlugin extends Plugin {
         waitUserSelectExcelFile((workbook: ExcelJS.Workbook) => {
           // 处理 Excel 数据
           workbook.eachSheet((worksheet, sheetId) => {
-            const sheetInfo: IWorksheetData = parseExcelUniverSheetInfo(worksheet);
+            const sheetInfo: UniverJS.IWorksheetData = parseExcelUniverSheetInfo(worksheet);
             univerWorkbook.addWorksheet(worksheet.name, sheetId, sheetInfo)
           });
           const univeData = univerWorkbook.getSnapshot()
