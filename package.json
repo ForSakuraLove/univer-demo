@@ -21,6 +21,7 @@
     "@univerjs/sheets-ui": "^0.1.5",
     "@univerjs/ui": "^0.1.5",
     "echarts": "^5.5.0",
+    "exceljs": "^4.4.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "typescript": "^5.4.4",

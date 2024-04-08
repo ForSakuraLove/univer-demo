@@ -24,12 +24,13 @@ import {
 import { IAccessor, Inject, Injector } from "@wendellhu/redi";
 import { FolderSingle } from '@univerjs/icons';
 import * as XLSX from 'xlsx';
-import { SetRangeValuesCommand } from "@univerjs/sheets";
+import * as ExcelJS from 'exceljs';
 
 
 
 const waitUserSelectExcelFile = (
-  onSelect: (workbook: XLSX.WorkBook) => void,
+  // onSelect: (workbook: XLSX.WorkBook) => void,
+  onSelect: (workbook: ExcelJS.Workbook) => void,
 ) => {
   const input = document.createElement("input");
   input.type = "file";
@@ -42,34 +43,47 @@ const waitUserSelectExcelFile = (
     if (!file) return;
     const reader = new FileReader();
     reader.readAsArrayBuffer(file);
-    reader.onload = () => {
+    // reader.onload = () => {
+    //   if (reader.result instanceof ArrayBuffer) {
+    //     const data = new Uint8Array(reader.result);
+    //     const workbook = XLSX.read(data, { type: 'array' });
+    //     if (!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) {
+    //       console.error('Workbook does not contain any sheets or is invalid.');
+    //       return;
+    //     }
+    //     onSelect(workbook);
+    //   } else {
+    //     console.error('Reader result is not an ArrayBuffer.');
+    //   }
+    // };
+    const workbook = new ExcelJS.Workbook();
+    reader.onload = async() => {
       if (reader.result instanceof ArrayBuffer) {
         const data = new Uint8Array(reader.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        if (!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) {
-          console.error('Workbook does not contain any sheets or is invalid.');
-          return;
-        }
+        await workbook.xlsx.load(data);
         onSelect(workbook);
-      } else {
+      }
+      else {
         console.error('Reader result is not an ArrayBuffer.');
       }
     };
-
   };
 };
-
 /**
  * Parse Excel worksheet to extract relevant information.
  * @param sheet The Excel worksheet to parse.
  * @returns An object containing information about the worksheet.
  */
-const parseExcelUniverSheetInfo = (sheet: XLSX.WorkSheet, sheetName: string): IWorksheetData => {
-  const sheetId = sheetName;
+// const parseExcelUniverSheetInfo = (sheet: XLSX.WorkSheet, sheetName: string): IWorksheetData => {
+const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet, sheetId: number): IWorksheetData => {
+  // const sheetId = sheetName;
+  // const name = sheetName;
+  const name = sheet.name;
   // const type = SheetTypes.GRID;
-  const name = sheetName;
-  const rowCount = 1000;
-  const columnCount = 20;
+  // const rowCount = 1000;
+  // const columnCount = 100;
+  const rowCount = sheet.rowCount;
+  const columnCount = sheet.columnCount;
   const defaultColumnWidth = 93;
   const defaultRowHeight = 27;
   const scrollTop = 200;
@@ -88,47 +102,107 @@ const parseExcelUniverSheetInfo = (sheet: XLSX.WorkSheet, sheetName: string): IW
     startRow: 0, // 冻结区域左上角单元格的行索引，设置为0表示从第一行开始冻结
     startColumn: 0, // 冻结区域左上角单元格的列索引
   };
-  const mergeData: IRange[] = []; // Merged cells
+  const mergeDataBefore: IRange[] = []; // Merged cells
   const cellData: IObjectMatrixPrimitiveType<ICellData> = {}; // Cell data
   const rowData: IObjectArrayPrimitiveType<Partial<IRowData>> = {}; // Row data
   const columnData: IObjectArrayPrimitiveType<Partial<IColumnData>> = {}; // Column data
 
-  if (sheet['!ref']) {
-    const range = XLSX.utils.decode_range(sheet['!ref']);
-    for (let rowIndex = range.s.r; rowIndex <= range.e.r; rowIndex++) {
-      for (let colIndex = range.s.c; colIndex <= range.e.c; colIndex++) {
-        const cellAddress = XLSX.utils.encode_cell({ r: rowIndex, c: colIndex });
-        const cell = sheet[cellAddress];
-        // Extract merged cell information
-        if (sheet['!merges']) {
-          const mergedCell = sheet['!merges'].find(merge => merge.s.r === rowIndex && merge.s.c === colIndex);
-          if (mergedCell) {
-            mergeData.push({
-              startRow: mergedCell.s.r,
-              startColumn: mergedCell.s.c,
-              endRow: mergedCell.e.r,
-              endColumn: mergedCell.e.c,
-            });
-          }
+  // if (sheet['!ref']) {
+  //   const range = XLSX.utils.decode_range(sheet['!ref']);
+  //   for (let rowIndex = range.s.r; rowIndex <= range.e.r; rowIndex++) {
+  //     for (let colIndex = range.s.c; colIndex <= range.e.c; colIndex++) {
+  //       const cellAddress = XLSX.utils.encode_cell({ r: rowIndex, c: colIndex });
+  //       const cell = sheet[cellAddress];
+  //       // Extract merged cell information
+  //       if (sheet['!merges']) {
+  //         const mergedCell = sheet['!merges'].find(merge => merge.s.r === rowIndex && merge.s.c === colIndex);
+  //         if (mergedCell) {
+  //           mergeData.push({
+  //             startRow: mergedCell.s.r,
+  //             startColumn: mergedCell.s.c,
+  //             endRow: mergedCell.e.r,
+  //             endColumn: mergedCell.e.c,
+  //           });
+  //         }
+  //       }
+  //       // Extract cell data
+  //       cellData[rowIndex] = cellData[rowIndex] || {};
+  //       cellData[rowIndex][colIndex] = { v: cell?.v };
+
+  //       // Extract row data
+  //       rowData[rowIndex] = {};
+
+  //       // Extract column data
+  //       columnData[colIndex] = {};
+  //     }
+  //   }
+  // }
+  sheet.eachRow({ includeEmpty: true }, (row) => {
+    row.eachCell({ includeEmpty: true }, (cell) => {
+      if (cell.isMerged) {
+        // 如果当前单元格是合并单元格，则将其范围添加到 mergeData 数组中
+        const masterCell = cell.master;
+        mergeDataBefore.push({
+          startRow: masterCell.fullAddress.row - 1,
+          startColumn: masterCell.fullAddress.col - 1,
+          endRow: cell.fullAddress.row - 1,
+          endColumn: cell.fullAddress.col - 1
+        });
+      }
+    });
+  });
+
+  // 创建一个对象，以便根据起始行和列的组合查找合并范围
+  const mergedRangesMap: { [key: string]: IRange } = {};
+
+  // 遍历合并范围数组并整理数据
+  mergeDataBefore.forEach(range => {
+    const key = `${range.startRow}-${range.startColumn}`;
+    if (!mergedRangesMap[key]) {
+      mergedRangesMap[key] = range;
+    } else {
+      // 更新现有范围的结束行和列
+      mergedRangesMap[key].endRow = Math.max(mergedRangesMap[key].endRow, range.endRow);
+      mergedRangesMap[key].endColumn = Math.max(mergedRangesMap[key].endColumn, range.endColumn);
+    }
+  });
+
+  // 将整理后的合并范围转换为数组
+  const mergeData: IRange[] = Object.values(mergedRangesMap);
+
+  for (let rowIndex = 1; rowIndex <= sheet.rowCount; rowIndex++) {
+    const row = sheet.getRow(rowIndex)
+    for (let colIndex = 1; colIndex <= sheet.columnCount; colIndex++) {
+      const cell = row.getCell(colIndex)
+      cellData[rowIndex - 1] = cellData[rowIndex - 1] || {}
+      rowData[rowIndex - 1] = rowData[rowIndex - 1] || {};
+      columnData[colIndex - 1] = columnData[colIndex - 1] || {};
+      if (cell.value) {
+        if (cell.isMerged && cell !== cell.master) {
+          cellData[rowIndex - 1][colIndex - 1] = {};
+          rowData[rowIndex - 1][colIndex - 1] = {};
+          columnData[colIndex - 1][rowIndex - 1] = {};
+        } else {
+          cellData[rowIndex - 1][colIndex - 1] = { v: cell.value };
+          rowData[rowIndex - 1][colIndex - 1] = { v: cell.value };
+          columnData[colIndex - 1][rowIndex - 1] = { v: cell.value };
         }
-        // Extract cell data
-        cellData[rowIndex] = cellData[rowIndex] || {};
-        cellData[rowIndex][colIndex] = { v: cell?.v };
-
-        // Extract row data
-        rowData[rowIndex] = {};
-
-        // Extract column data
-        columnData[colIndex] = {};
+      } else {
+        cellData[rowIndex - 1][colIndex - 1] = {};
+        rowData[rowIndex - 1][colIndex - 1] = {};
+        columnData[colIndex - 1][rowIndex - 1] = {};
       }
     }
   }
-
+  console.log(mergeData)
+  console.log(cellData)
+  console.log(rowData)
+  console.log(columnData)
   const sheetData: IWorksheetData = {
     /**
    * Id of the worksheet. This should be unique and immutable across the lifecycle of the worksheet.
    */
-    id: sheetId,
+    id: sheetId.toString(),
     /** Name of the sheet. */
     name: name,
     tabColor: 'white',
@@ -221,15 +295,28 @@ class ImportExcelButtonPlugin extends Plugin {
         sheetMap.forEach(sheet => {
           univerWorkbook.removeSheet(sheet.getSheetId())
         })
-        const commandService = accessor.get(ICommandService);
         // wait user select excel file
-        waitUserSelectExcelFile((workbook: XLSX.WorkBook) => {
-          let sheetIndex = 0;
-          Object.keys(workbook.Sheets).forEach(sheetName => {
-            const sheet = workbook.Sheets[sheetName];
-            const sheetInfo: IWorksheetData = parseExcelUniverSheetInfo(sheet, sheetName);
-            univerWorkbook.addWorksheet(sheetName, sheetIndex, sheetInfo)
-            sheetIndex++;
+        // waitUserSelectExcelFile((workbook: XLSX.WorkBook) => {
+        //   let sheetIndex = 0;
+        //   Object.keys(workbook.Sheets).forEach(sheetName => {
+        //     const sheet = workbook.Sheets[sheetName];
+        //     const sheetInfo: IWorksheetData = parseExcelUniverSheetInfo(sheet, sheetName);
+        //     univerWorkbook.addWorksheet(sheetName, sheetIndex, sheetInfo)
+        //     sheetIndex++;
+        //   });
+        //   const univeData = univerWorkbook.getSnapshot()
+        //   console.log(univeData)
+        //   if (ImportExcelButtonPlugin.onImportExcelCallback) {
+        //     ImportExcelButtonPlugin.onImportExcelCallback(univeData);
+        //   } else {
+        //     console.error("onImportExcelCallback is not defined");
+        //   }
+        // });
+        waitUserSelectExcelFile((workbook: ExcelJS.Workbook) => {
+          // 处理 Excel 数据
+          workbook.eachSheet((worksheet, sheetId) => {
+            const sheetInfo: IWorksheetData = parseExcelUniverSheetInfo(worksheet, sheetId);
+            univerWorkbook.addWorksheet(worksheet.name, sheetId, sheetInfo)
           });
           const univeData = univerWorkbook.getSnapshot()
           if (ImportExcelButtonPlugin.onImportExcelCallback) {
@@ -237,7 +324,6 @@ class ImportExcelButtonPlugin extends Plugin {
           } else {
             console.error("onImportExcelCallback is not defined");
           }
-          commandService.executeCommand(SetRangeValuesCommand.id, {});
         });
         return true;
       },

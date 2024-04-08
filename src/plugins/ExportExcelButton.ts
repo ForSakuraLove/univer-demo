@@ -10,7 +10,6 @@ import {
   ICommandService,
   IUniverInstanceService,
   Plugin,
-  Worksheet
 } from "@univerjs/core";
 import { IAccessor, Inject, Injector } from "@wendellhu/redi";
 import { FolderSingle } from '@univerjs/icons';
