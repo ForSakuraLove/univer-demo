@@ -90,8 +90,6 @@ const UniverSheet = forwardRef(() => {
   };
 
   useEffect(() => {
-    console.log('init 开始')
-    console.log(univeData)
     init();
     return () => {
       destroyUniver();

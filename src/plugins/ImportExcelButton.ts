@@ -128,6 +128,12 @@ const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): IWorksheetData => 
       cellData[rowIndex - 1] = cellData[rowIndex - 1] || {}
       rowData[rowIndex - 1] = rowData[rowIndex - 1] || {};
       columnData[colIndex - 1] = columnData[colIndex - 1] || {};
+      console.log(cell.$col$row+':')
+      if(cell.font){
+        if(cell.font.color){
+          cellData[rowIndex - 1][colIndex - 1]
+        }
+      }
       if (cell.value) {
         if (cell.isMerged && cell !== cell.master) {
           cellData[rowIndex - 1][colIndex - 1] = {};
@@ -137,6 +143,7 @@ const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): IWorksheetData => 
           cellData[rowIndex - 1][colIndex - 1] = { v: cell.value };
           rowData[rowIndex - 1][colIndex - 1] = { v: cell.value };
           columnData[colIndex - 1][rowIndex - 1] = { v: cell.value };
+
         }
       } else {
         cellData[rowIndex - 1][colIndex - 1] = {};
