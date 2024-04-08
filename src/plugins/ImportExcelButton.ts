@@ -23,13 +23,11 @@ import {
 } from "@univerjs/core";
 import { IAccessor, Inject, Injector } from "@wendellhu/redi";
 import { FolderSingle } from '@univerjs/icons';
-import * as XLSX from 'xlsx';
 import * as ExcelJS from 'exceljs';
 
 
 
 const waitUserSelectExcelFile = (
-  // onSelect: (workbook: XLSX.WorkBook) => void,
   onSelect: (workbook: ExcelJS.Workbook) => void,
 ) => {
   const input = document.createElement("input");
@@ -43,21 +41,8 @@ const waitUserSelectExcelFile = (
     if (!file) return;
     const reader = new FileReader();
     reader.readAsArrayBuffer(file);
-    // reader.onload = () => {
-    //   if (reader.result instanceof ArrayBuffer) {
-    //     const data = new Uint8Array(reader.result);
-    //     const workbook = XLSX.read(data, { type: 'array' });
-    //     if (!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) {
-    //       console.error('Workbook does not contain any sheets or is invalid.');
-    //       return;
-    //     }
-    //     onSelect(workbook);
-    //   } else {
-    //     console.error('Reader result is not an ArrayBuffer.');
-    //   }
-    // };
     const workbook = new ExcelJS.Workbook();
-    reader.onload = async() => {
+    reader.onload = async () => {
       if (reader.result instanceof ArrayBuffer) {
         const data = new Uint8Array(reader.result);
         await workbook.xlsx.load(data);
@@ -75,15 +60,12 @@ const waitUserSelectExcelFile = (
  * @returns An object containing information about the worksheet.
  */
 // const parseExcelUniverSheetInfo = (sheet: XLSX.WorkSheet, sheetName: string): IWorksheetData => {
-const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet, sheetId: number): IWorksheetData => {
-  // const sheetId = sheetName;
-  // const name = sheetName;
+const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): IWorksheetData => {
+  const sheetId = sheet.name;
   const name = sheet.name;
   // const type = SheetTypes.GRID;
-  // const rowCount = 1000;
-  // const columnCount = 100;
-  const rowCount = sheet.rowCount;
-  const columnCount = sheet.columnCount;
+  const rowCount = sheet.rowCount + 100;
+  const columnCount = sheet.columnCount + 100;
   const defaultColumnWidth = 93;
   const defaultRowHeight = 27;
   const scrollTop = 200;
@@ -106,37 +88,6 @@ const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet, sheetId: number): I
   const cellData: IObjectMatrixPrimitiveType<ICellData> = {}; // Cell data
   const rowData: IObjectArrayPrimitiveType<Partial<IRowData>> = {}; // Row data
   const columnData: IObjectArrayPrimitiveType<Partial<IColumnData>> = {}; // Column data
-
-  // if (sheet['!ref']) {
-  //   const range = XLSX.utils.decode_range(sheet['!ref']);
-  //   for (let rowIndex = range.s.r; rowIndex <= range.e.r; rowIndex++) {
-  //     for (let colIndex = range.s.c; colIndex <= range.e.c; colIndex++) {
-  //       const cellAddress = XLSX.utils.encode_cell({ r: rowIndex, c: colIndex });
-  //       const cell = sheet[cellAddress];
-  //       // Extract merged cell information
-  //       if (sheet['!merges']) {
-  //         const mergedCell = sheet['!merges'].find(merge => merge.s.r === rowIndex && merge.s.c === colIndex);
-  //         if (mergedCell) {
-  //           mergeData.push({
-  //             startRow: mergedCell.s.r,
-  //             startColumn: mergedCell.s.c,
-  //             endRow: mergedCell.e.r,
-  //             endColumn: mergedCell.e.c,
-  //           });
-  //         }
-  //       }
-  //       // Extract cell data
-  //       cellData[rowIndex] = cellData[rowIndex] || {};
-  //       cellData[rowIndex][colIndex] = { v: cell?.v };
-
-  //       // Extract row data
-  //       rowData[rowIndex] = {};
-
-  //       // Extract column data
-  //       columnData[colIndex] = {};
-  //     }
-  //   }
-  // }
   sheet.eachRow({ includeEmpty: true }, (row) => {
     row.eachCell({ includeEmpty: true }, (cell) => {
       if (cell.isMerged) {
@@ -194,10 +145,6 @@ const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet, sheetId: number): I
       }
     }
   }
-  console.log(mergeData)
-  console.log(cellData)
-  console.log(rowData)
-  console.log(columnData)
   const sheetData: IWorksheetData = {
     /**
    * Id of the worksheet. This should be unique and immutable across the lifecycle of the worksheet.
@@ -295,27 +242,10 @@ class ImportExcelButtonPlugin extends Plugin {
         sheetMap.forEach(sheet => {
           univerWorkbook.removeSheet(sheet.getSheetId())
         })
-        // wait user select excel file
-        // waitUserSelectExcelFile((workbook: XLSX.WorkBook) => {
-        //   let sheetIndex = 0;
-        //   Object.keys(workbook.Sheets).forEach(sheetName => {
-        //     const sheet = workbook.Sheets[sheetName];
-        //     const sheetInfo: IWorksheetData = parseExcelUniverSheetInfo(sheet, sheetName);
-        //     univerWorkbook.addWorksheet(sheetName, sheetIndex, sheetInfo)
-        //     sheetIndex++;
-        //   });
-        //   const univeData = univerWorkbook.getSnapshot()
-        //   console.log(univeData)
-        //   if (ImportExcelButtonPlugin.onImportExcelCallback) {
-        //     ImportExcelButtonPlugin.onImportExcelCallback(univeData);
-        //   } else {
-        //     console.error("onImportExcelCallback is not defined");
-        //   }
-        // });
         waitUserSelectExcelFile((workbook: ExcelJS.Workbook) => {
           // 处理 Excel 数据
           workbook.eachSheet((worksheet, sheetId) => {
-            const sheetInfo: IWorksheetData = parseExcelUniverSheetInfo(worksheet, sheetId);
+            const sheetInfo: IWorksheetData = parseExcelUniverSheetInfo(worksheet);
             univerWorkbook.addWorksheet(worksheet.name, sheetId, sheetInfo)
           });
           const univeData = univerWorkbook.getSnapshot()
