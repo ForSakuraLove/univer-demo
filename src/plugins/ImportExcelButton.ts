@@ -9,6 +9,9 @@ import * as UniverJS from "@univerjs/core";
 import { IAccessor, Inject, Injector } from "@wendellhu/redi";
 import { FolderSingle } from '@univerjs/icons';
 import * as ExcelJS from 'exceljs';
+import { Fill, FillPattern, FillGradientAngle, FillGradientPath } from 'exceljs';
+import { c } from "vite/dist/node/types.d-aGj9QkWt";
+
 
 
 
@@ -27,11 +30,12 @@ const waitUserSelectExcelFile = (
     const reader = new FileReader();
     reader.readAsArrayBuffer(file);
     const workbook = new ExcelJS.Workbook();
-    reader.onload = async () => {
+    reader.onload = () => {
       if (reader.result instanceof ArrayBuffer) {
         const data = new Uint8Array(reader.result);
-        await workbook.xlsx.load(data);
-        onSelect(workbook);
+        workbook.xlsx.load(data).then(() => {
+          onSelect(workbook);
+        })
       }
       else {
         console.error('Reader result is not an ArrayBuffer.');
@@ -51,7 +55,7 @@ const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): UniverJS.IWorkshee
   // const type = SheetTypes.GRID;
   const rowCount = sheet.rowCount + 100;
   const columnCount = sheet.columnCount + 100;
-  const defaultColumnWidth = 93;
+  const defaultColumnWidth = 60;
   const defaultRowHeight = 27;
   const scrollTop = 200;
   const scrollLeft = 100;
@@ -133,10 +137,73 @@ const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): UniverJS.IWorkshee
       if (cell.style && Object.keys(cell.style).length === 0) {
         continue
       }
+
       let cellStyle: UniverJS.IStyleData = {}
       console.log(cell.$col$row)
       console.log(cell.style)
+      //字体名字，如宋体
+      if (cell.style.font?.name) {
+        cellStyle.ff = cell.style.font?.name
+      }
 
+      //字体大小
+      if (cell.style.font?.size) {
+        cellStyle.fs = cell.style.font?.size
+      }
+
+      //字体斜体
+      if (cell.style.font?.italic) {
+        cellStyle.it = 1
+      }
+
+      //字体加粗
+      if (cell.style.font?.bold) {
+        cellStyle.bl = 1
+      }
+
+      //字体加粗
+      if (cell.style.font?.bold) {
+        cellStyle.bl = 1
+      }
+
+      //下划线
+      let cellStyleITextDecoration: UniverJS.ITextDecoration = { s: 0, };
+      let cellStyleTextDecoration: UniverJS.TextDecoration = 12
+      if (cell.style.font?.underline) {
+        cellStyleITextDecoration.s = 1
+        if (cell.font.underline === 'double') {
+          cellStyleTextDecoration = 10
+        } else if (cell.font.underline === 'singleAccounting') {
+          cellStyleTextDecoration = 12
+        } else if (cell.font.underline === 'doubleAccounting') {
+          cellStyleTextDecoration = 10
+        }
+        cellStyleITextDecoration.t = cellStyleTextDecoration
+      }
+
+      //删除线
+      let cellStyleStrikeITextDecoration: UniverJS.ITextDecoration = { s: 0, };
+      if (cell.style.font?.strike) {
+        cellStyleStrikeITextDecoration.s = 1
+      }
+
+      //上划线
+      // let cellStyleOverlineITextDecoration: UniverJS.ITextDecoration = { s: 0,};
+      // if(cell.style.font?.strike) {
+      //   cellStyleStrikeITextDecoration.s = 1
+      // }
+
+      let cellStyleBackground: UniverJS.IColorStyle = { rgb: '#ffffff' }
+      //背景颜色
+      if (cell.style.fill) {
+        if (cell.style.fill.type === 'pattern') {
+          if (cell.style.fill.fgColor?.argb) {
+            // const argb = cell.style.fill.fgColor.argb
+            // cellStyleBackground.rgb = '#' + argb.slice(-6);
+            console.log(cellStyleBackground)
+          }
+        }
+      }
 
       // 文本旋转样式
       const csat = cell.style.alignment?.textRotation
@@ -181,14 +248,15 @@ const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): UniverJS.IWorkshee
           cellStyleHorizontalAlign = 3;
         } else if (csah === 'justify') {
           cellStyleHorizontalAlign = 4;
-        } else if (csah === 'fill'){
+        }
+        //文本折行策略的截断
+        if (csah === 'fill') {
           cellStyleWrapStrategy = 2
         }
       }
 
       //垂直对齐方式
       let cellStyleVerticalAlign: UniverJS.VerticalAlign = 0
-
       const csav = cell.style.alignment?.vertical
       if (csav) {
         if (csav === 'top') {
@@ -200,10 +268,16 @@ const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): UniverJS.IWorkshee
         }
       }
 
+      //单元格填充（上下左右）
+      // let cellStylePaddingData: UniverJS.IPaddingData = {}
       cellStyle.tr = cellStyleTextRotation
       cellStyle.td = cellStyleTextDirection
       cellStyle.ht = cellStyleHorizontalAlign
       cellStyle.vt = cellStyleVerticalAlign
+      cellStyle.tb = cellStyleWrapStrategy
+      cellStyle.ul = cellStyleITextDecoration
+      cellStyle.st = cellStyleStrikeITextDecoration
+      // cellStyle.bg = cellStyleBackground
       cellData[rowIndex - 1][colIndex - 1].s = cellStyle
     }
   }
@@ -211,7 +285,7 @@ const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): UniverJS.IWorkshee
     /**
    * Id of the worksheet. This should be unique and immutable across the lifecycle of the worksheet.
    */
-    id: sheetId.toString(),
+    id: sheetId,
     /** Name of the sheet. */
     name: name,
     tabColor: 'white',
