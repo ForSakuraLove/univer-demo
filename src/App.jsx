@@ -5,10 +5,12 @@ function App() {
  
   return (
     <div id="root">
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <UniverSheet style={{ flex: 1 }}/>
+      {/* <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}> */}
+        <UniverSheet 
+        // style={{ flex: 1 }}
+        />
         {/* <MyPieChart /> */}
-      </div>
+      {/* </div> */}
     </div>
   );
 }

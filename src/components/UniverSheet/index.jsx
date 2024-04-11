@@ -22,11 +22,13 @@ import { MY_DATA } from '../../assets/my-data'
 
 
 // eslint-disable-next-line react/display-name
-const UniverSheet = forwardRef(() => {
+const UniverSheet = () => {
   const univerRef = useRef(null);
   const workbookRef = useRef(null);
   const containerRef = useRef(null);
   const [univeData, setUniveData] = useState(MY_DATA);
+  const [univerInstance, setUniverInstance] = useState(null);
+  const [workbookInstance, setWorkbookInstance] = useState(null);
 
   const handleImportExcel = (data) => {
     // 更新组件状态以触发刷新
@@ -53,7 +55,7 @@ const UniverSheet = forwardRef(() => {
       theme: defaultTheme,
     });
     univerRef.current = univer;
-
+    setUniverInstance(univer);
     // core plugins
     univer.registerPlugin(UniverRenderEnginePlugin);
     univer.registerPlugin(UniverFormulaEnginePlugin);
@@ -78,6 +80,8 @@ const UniverSheet = forwardRef(() => {
     univer.registerPlugin(ExportExcelButtonPlugin);
     // create workbook instance 
     workbookRef.current = univer.createUniverSheet(univeData);
+    setWorkbookInstance(workbookRef.current);
+    console.log(workbookRef.current)
   };
 
   /**
@@ -97,6 +101,6 @@ const UniverSheet = forwardRef(() => {
   }, [univeData]);
 
   return <div ref={containerRef} className="univer-container" />;
-});
+};
 
 export default UniverSheet;
