@@ -15,7 +15,7 @@ import { UniverSheetsPlugin } from '@univerjs/sheets';
 import { UniverSheetsFormulaPlugin } from '@univerjs/sheets-formula';
 import { UniverSheetsUIPlugin } from '@univerjs/sheets-ui';
 import { UniverUIPlugin } from '@univerjs/ui';
-import { forwardRef, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ImportExcelButtonPlugin from '../../plugins/ImportExcelButton';
 import ExportExcelButtonPlugin from '../../plugins/ExportExcelButton';
 import { MY_DATA } from '../../assets/my-data'
