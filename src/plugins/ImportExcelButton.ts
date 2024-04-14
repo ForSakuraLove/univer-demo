@@ -120,7 +120,6 @@ const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): UniverJS.IWorkshee
           cellData[rowIndex - 1][colIndex - 1] = { v: cell.value };
           rowData[rowIndex - 1][colIndex - 1] = { v: cell.value };
           columnData[colIndex - 1][rowIndex - 1] = { v: cell.value };
-
         }
       } else {
         cellData[rowIndex - 1][colIndex - 1] = {};
@@ -560,7 +559,7 @@ class ImportExcelButtonPlugin extends UniverJS.Plugin {
   ) {
     super('import-excel-plugin') // plugin id
   }
-  
+
   // 接收函数回调
   static setOnImportExcelCallback(callback: (data: any) => void) {
     ImportExcelButtonPlugin.onImportExcelCallback = callback;
