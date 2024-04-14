@@ -13,7 +13,7 @@ import {
 } from "@univerjs/core";
 import { IAccessor, Inject, Injector } from "@wendellhu/redi";
 import { FolderSingle } from '@univerjs/icons';
-import * as XLSX from 'xlsx';
+
 /**
  * Export Excel Button Plugin
  * A simple Plugin example, show how to write a plugin.
@@ -55,10 +55,7 @@ class ExportExcelButtonPlugin extends Plugin {
         const univer = accessor.get(IUniverInstanceService);
         const univerWorkbook = univer.getCurrentUniverSheetInstance()
         const sheetMap = univerWorkbook.getWorksheets()
-        const workbook = XLSX.utils.book_new();
         sheetMap.forEach(sheet => {
-          const xlsxSheet: XLSX.WorkSheet = {};
-
           // 遍历行
           for (let row = 0; row < sheet.getRowCount(); row++) {
             // 遍历列
@@ -66,15 +63,10 @@ class ExportExcelButtonPlugin extends Plugin {
               const cell = sheet.getCell(row, col);
               if (cell) {
                 const cellAddress = String.fromCharCode('A'.charCodeAt(0) + col) + (row + 1);
-                xlsxSheet[cellAddress] = cell.v; // v 表示单元格的值
               }
             }
           }
-          console.log(xlsxSheet);
-          XLSX.utils.book_append_sheet(workbook, xlsxSheet, sheet.getName());
         })
-        console.log(workbook);
-        XLSX.writeFile(workbook, "Presidents" + new Date() + ".xlsx");
       },
     };
     this.commandService.registerCommand(command);

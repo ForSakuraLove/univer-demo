@@ -80,8 +80,6 @@ const UniverSheet = () => {
     univer.registerPlugin(ExportExcelButtonPlugin);
     // create workbook instance 
     workbookRef.current = univer.createUniverSheet(univeData);
-    setWorkbookInstance(workbookRef.current);
-    console.log(workbookRef.current)
   };
 
   /**

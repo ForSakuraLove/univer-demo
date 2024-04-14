@@ -1,16 +1,8 @@
-import {
-  ComponentManager,
-  IMenuService,
-  MenuGroup,
-  MenuItemType,
-  MenuPosition,
-} from "@univerjs/ui";
+import { ComponentManager, IMenuService, MenuGroup, MenuItemType, MenuPosition, } from "@univerjs/ui";
 import * as UniverJS from "@univerjs/core";
 import { IAccessor, Inject, Injector } from "@wendellhu/redi";
 import { FolderSingle } from '@univerjs/icons';
 import * as ExcelJS from 'exceljs';
-import { Fill, FillPattern, FillGradientAngle, FillGradientPath } from 'exceljs';
-import { c } from "vite/dist/node/types.d-aGj9QkWt";
 
 
 
@@ -110,6 +102,8 @@ const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): UniverJS.IWorkshee
   // 将整理后的合并范围转换为数组
   const mergeData: UniverJS.IRange[] = Object.values(mergedRangesMap);
 
+  console.log(sheet.name)
+
   for (let rowIndex = 1; rowIndex <= sheet.rowCount; rowIndex++) {
     const row = sheet.getRow(rowIndex)
     for (let colIndex = 1; colIndex <= sheet.columnCount; colIndex++) {
@@ -133,6 +127,7 @@ const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): UniverJS.IWorkshee
         rowData[rowIndex - 1][colIndex - 1] = {};
         columnData[colIndex - 1][rowIndex - 1] = {};
       }
+
       //没有样式
       if (cell.style && Object.keys(cell.style).length === 0) {
         continue
@@ -154,11 +149,6 @@ const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): UniverJS.IWorkshee
       //字体斜体
       if (cell.style.font?.italic) {
         cellStyle.it = 1
-      }
-
-      //字体加粗
-      if (cell.style.font?.bold) {
-        cellStyle.bl = 1
       }
 
       //字体加粗
@@ -189,12 +179,9 @@ const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): UniverJS.IWorkshee
 
       //上划线
       // let cellStyleOverlineITextDecoration: UniverJS.ITextDecoration = { s: 0,};
-      // if(cell.style.font?.strike) {
-      //   cellStyleStrikeITextDecoration.s = 1
-      // }
 
-      let cellStyleBackground: UniverJS.IColorStyle = { rgb: '#ffffff' }
       //背景颜色
+      let cellStyleBackground: UniverJS.IColorStyle = { rgb: '#ffffff' }
       if (cell.style.fill) {
         if (cell.style.fill.type === 'pattern') {
           if (cell.style.fill.fgColor?.argb) {
@@ -202,6 +189,227 @@ const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): UniverJS.IWorkshee
             // cellStyleBackground.rgb = '#' + argb.slice(-6);
             console.log(cellStyleBackground)
           }
+        }
+      }
+
+      //边框
+      let cellStyleBorder: UniverJS.IBorderData = {}
+      //左边框
+      if (cell.style.border?.left) {
+        let cellStyleIColorStyle: UniverJS.IColorStyle = { rgb: '#000000' }
+        let cellStyleIBorderStyleData: UniverJS.IBorderStyleData = { s: 0, cl: cellStyleIColorStyle }
+        if (cell.style.border.left.style === 'thin') {
+          cellStyleIBorderStyleData.s = 1
+        } else if (cell.style.border.left.style === 'hair') {
+          cellStyleIBorderStyleData.s = 2
+        } else if (cell.style.border.left.style === 'dotted') {
+          cellStyleIBorderStyleData.s = 3
+        } else if (cell.style.border.left.style === 'dashed') {
+          cellStyleIBorderStyleData.s = 4
+        } else if (cell.style.border.left.style === 'dashDot') {
+          cellStyleIBorderStyleData.s = 5
+        } else if (cell.style.border.left.style === 'dashDotDot') {
+          cellStyleIBorderStyleData.s = 6
+        } else if (cell.style.border.left.style === 'double') {
+          cellStyleIBorderStyleData.s = 7
+        } else if (cell.style.border.left.style === 'medium') {
+          cellStyleIBorderStyleData.s = 8
+        } else if (cell.style.border.left.style === 'mediumDashed') {
+          cellStyleIBorderStyleData.s = 9
+        } else if (cell.style.border.left.style === 'mediumDashDot') {
+          cellStyleIBorderStyleData.s = 10
+        } else if (cell.style.border.left.style === 'mediumDashDotDot') {
+          cellStyleIBorderStyleData.s = 11
+        } else if (cell.style.border.left.style === 'slantDashDot') {
+          cellStyleIBorderStyleData.s = 12
+        } else {
+          cellStyleIBorderStyleData.s = 13
+        }
+        if (cell.style.border.left.color?.argb) {
+          const argb = cell.style.border.left.color.argb
+          cellStyleIColorStyle.rgb = '#' + argb.slice(-6);
+        }
+        cellStyleIBorderStyleData.cl = cellStyleIColorStyle
+        cellStyleBorder.l = cellStyleIBorderStyleData
+      }
+
+      //上边框
+      if (cell.style.border?.top) {
+        let cellStyleIColorStyle: UniverJS.IColorStyle = { rgb: '#000000' }
+        let cellStyleIBorderStyleData: UniverJS.IBorderStyleData = { s: 0, cl: cellStyleIColorStyle }
+        if (cell.style.border.top.style === 'thin') {
+          cellStyleIBorderStyleData.s = 1
+        } else if (cell.style.border.top.style === 'hair') {
+          cellStyleIBorderStyleData.s = 2
+        } else if (cell.style.border.top.style === 'dotted') {
+          cellStyleIBorderStyleData.s = 3
+        } else if (cell.style.border.top.style === 'dashed') {
+          cellStyleIBorderStyleData.s = 4
+        } else if (cell.style.border.top.style === 'dashDot') {
+          cellStyleIBorderStyleData.s = 5
+        } else if (cell.style.border.top.style === 'dashDotDot') {
+          cellStyleIBorderStyleData.s = 6
+        } else if (cell.style.border.top.style === 'double') {
+          cellStyleIBorderStyleData.s = 7
+        } else if (cell.style.border.top.style === 'medium') {
+          cellStyleIBorderStyleData.s = 8
+        } else if (cell.style.border.top.style === 'mediumDashed') {
+          cellStyleIBorderStyleData.s = 9
+        } else if (cell.style.border.top.style === 'mediumDashDot') {
+          cellStyleIBorderStyleData.s = 10
+        } else if (cell.style.border.top.style === 'mediumDashDotDot') {
+          cellStyleIBorderStyleData.s = 11
+        } else if (cell.style.border.top.style === 'slantDashDot') {
+          cellStyleIBorderStyleData.s = 12
+        } else {
+          cellStyleIBorderStyleData.s = 13
+        }
+        if (cell.style.border.top.color?.argb) {
+          const argb = cell.style.border.top.color.argb
+          cellStyleIColorStyle.rgb = '#' + argb.slice(-6);
+        }
+        cellStyleIBorderStyleData.cl = cellStyleIColorStyle
+        cellStyleBorder.t = cellStyleIBorderStyleData
+      }
+
+      //右边框
+      if (cell.style.border?.right) {
+        let cellStyleIColorStyle: UniverJS.IColorStyle = { rgb: '#000000' }
+        let cellStyleIBorderStyleData: UniverJS.IBorderStyleData = { s: 0, cl: cellStyleIColorStyle }
+        if (cell.style.border.right.style === 'thin') {
+          cellStyleIBorderStyleData.s = 1
+        } else if (cell.style.border.right.style === 'hair') {
+          cellStyleIBorderStyleData.s = 2
+        } else if (cell.style.border.right.style === 'dotted') {
+          cellStyleIBorderStyleData.s = 3
+        } else if (cell.style.border.right.style === 'dashed') {
+          cellStyleIBorderStyleData.s = 4
+        } else if (cell.style.border.right.style === 'dashDot') {
+          cellStyleIBorderStyleData.s = 5
+        } else if (cell.style.border.right.style === 'dashDotDot') {
+          cellStyleIBorderStyleData.s = 6
+        } else if (cell.style.border.right.style === 'double') {
+          cellStyleIBorderStyleData.s = 7
+        } else if (cell.style.border.right.style === 'medium') {
+          cellStyleIBorderStyleData.s = 8
+        } else if (cell.style.border.right.style === 'mediumDashed') {
+          cellStyleIBorderStyleData.s = 9
+        } else if (cell.style.border.right.style === 'mediumDashDot') {
+          cellStyleIBorderStyleData.s = 10
+        } else if (cell.style.border.right.style === 'mediumDashDotDot') {
+          cellStyleIBorderStyleData.s = 11
+        } else if (cell.style.border.right.style === 'slantDashDot') {
+          cellStyleIBorderStyleData.s = 12
+        } else {
+          cellStyleIBorderStyleData.s = 13
+        }
+        if (cell.style.border.right.color?.argb) {
+          const argb = cell.style.border.right.color.argb
+          cellStyleIColorStyle.rgb = '#' + argb.slice(-6);
+        }
+        cellStyleIBorderStyleData.cl = cellStyleIColorStyle
+        cellStyleBorder.r = cellStyleIBorderStyleData
+      }
+
+      //下边框
+      if (cell.style.border?.bottom) {
+        let cellStyleIColorStyle: UniverJS.IColorStyle = { rgb: '#000000' }
+        let cellStyleIBorderStyleData: UniverJS.IBorderStyleData = { s: 0, cl: cellStyleIColorStyle }
+        if (cell.style.border.bottom.style === 'thin') {
+          cellStyleIBorderStyleData.s = 1
+        } else if (cell.style.border.bottom.style === 'hair') {
+          cellStyleIBorderStyleData.s = 2
+        } else if (cell.style.border.bottom.style === 'dotted') {
+          cellStyleIBorderStyleData.s = 3
+        } else if (cell.style.border.bottom.style === 'dashed') {
+          cellStyleIBorderStyleData.s = 4
+        } else if (cell.style.border.bottom.style === 'dashDot') {
+          cellStyleIBorderStyleData.s = 5
+        } else if (cell.style.border.bottom.style === 'dashDotDot') {
+          cellStyleIBorderStyleData.s = 6
+        } else if (cell.style.border.bottom.style === 'double') {
+          cellStyleIBorderStyleData.s = 7
+        } else if (cell.style.border.bottom.style === 'medium') {
+          cellStyleIBorderStyleData.s = 8
+        } else if (cell.style.border.bottom.style === 'mediumDashed') {
+          cellStyleIBorderStyleData.s = 9
+        } else if (cell.style.border.bottom.style === 'mediumDashDot') {
+          cellStyleIBorderStyleData.s = 10
+        } else if (cell.style.border.bottom.style === 'mediumDashDotDot') {
+          cellStyleIBorderStyleData.s = 11
+        } else if (cell.style.border.bottom.style === 'slantDashDot') {
+          cellStyleIBorderStyleData.s = 12
+        } else {
+          cellStyleIBorderStyleData.s = 13
+        }
+        if (cell.style.border.bottom.color?.argb) {
+          const argb = cell.style.border.bottom.color.argb
+          cellStyleIColorStyle.rgb = '#' + argb.slice(-6);
+        }
+        cellStyleIBorderStyleData.cl = cellStyleIColorStyle
+        cellStyleBorder.b = cellStyleIBorderStyleData
+      }
+
+      //对角线
+      if (cell.style.border?.diagonal) {
+        let cellStyleIColorStyle: UniverJS.IColorStyle = { rgb: '#000000' }
+        let cellStyleIBorderStyleData: UniverJS.IBorderStyleData = { s: 0, cl: cellStyleIColorStyle }
+        if (cell.style.border.diagonal.style === 'thin') {
+          cellStyleIBorderStyleData.s = 1
+        } else if (cell.style.border.diagonal.style === 'hair') {
+          cellStyleIBorderStyleData.s = 2
+        } else if (cell.style.border.diagonal.style === 'dotted') {
+          cellStyleIBorderStyleData.s = 3
+        } else if (cell.style.border.diagonal.style === 'dashed') {
+          cellStyleIBorderStyleData.s = 4
+        } else if (cell.style.border.diagonal.style === 'dashDot') {
+          cellStyleIBorderStyleData.s = 5
+        } else if (cell.style.border.diagonal.style === 'dashDotDot') {
+          cellStyleIBorderStyleData.s = 6
+        } else if (cell.style.border.diagonal.style === 'double') {
+          cellStyleIBorderStyleData.s = 7
+        } else if (cell.style.border.diagonal.style === 'medium') {
+          cellStyleIBorderStyleData.s = 8
+        } else if (cell.style.border.diagonal.style === 'mediumDashed') {
+          cellStyleIBorderStyleData.s = 9
+        } else if (cell.style.border.diagonal.style === 'mediumDashDot') {
+          cellStyleIBorderStyleData.s = 10
+        } else if (cell.style.border.diagonal.style === 'mediumDashDotDot') {
+          cellStyleIBorderStyleData.s = 11
+        } else if (cell.style.border.diagonal.style === 'slantDashDot') {
+          cellStyleIBorderStyleData.s = 12
+        } else {
+          cellStyleIBorderStyleData.s = 13
+        }
+        if (cell.style.border.diagonal.color?.argb) {
+          const argb = cell.style.border.diagonal.color.argb
+          cellStyleIColorStyle.rgb = '#' + argb.slice(-6);
+        }
+        cellStyleIBorderStyleData.cl = cellStyleIColorStyle
+        if (cell.style.border.diagonal.up === false && cell.style.border.diagonal.down === true) {
+          cellStyleBorder.tl_br = cellStyleIBorderStyleData
+        } else if (cell.style.border.diagonal.up === true && cell.style.border.diagonal.down === false) {
+          cellStyleBorder.bl_tr = cellStyleIBorderStyleData
+        }
+      }
+
+
+      //字体颜色
+      let cellStyleForeground: UniverJS.IColorStyle = { rgb: '#000000' }
+      if (cell.style.font?.color) {
+        if (cell.style.font.color?.argb) {
+          const argb = cell.style.font.color.argb
+          cellStyleForeground.rgb = '#' + argb.slice(-6);
+        }
+      }
+
+      //上标，下标
+      let cellStyleBaselineOffset: UniverJS.BaselineOffset = 1
+      if (cell.style.font?.vertAlign) {
+        if (cell.style.font.vertAlign === 'subscript') {
+          cellStyleBaselineOffset = 2
+        } else {
+          cellStyleBaselineOffset = 3
         }
       }
 
@@ -270,14 +478,20 @@ const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): UniverJS.IWorkshee
 
       //单元格填充（上下左右）
       // let cellStylePaddingData: UniverJS.IPaddingData = {}
+
       cellStyle.tr = cellStyleTextRotation
       cellStyle.td = cellStyleTextDirection
       cellStyle.ht = cellStyleHorizontalAlign
       cellStyle.vt = cellStyleVerticalAlign
       cellStyle.tb = cellStyleWrapStrategy
+      // cellStyle.pd = cellStylePaddingData
       cellStyle.ul = cellStyleITextDecoration
       cellStyle.st = cellStyleStrikeITextDecoration
+      // cellStyle.ol
       // cellStyle.bg = cellStyleBackground
+      cellStyle.bd = cellStyleBorder
+      cellStyle.cl = cellStyleForeground
+      cellStyle.va = cellStyleBaselineOffset
       cellData[rowIndex - 1][colIndex - 1].s = cellStyle
     }
   }
