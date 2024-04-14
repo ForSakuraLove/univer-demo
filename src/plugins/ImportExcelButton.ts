@@ -117,9 +117,9 @@ const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): UniverJS.IWorkshee
           rowData[rowIndex - 1][colIndex - 1] = {};
           columnData[colIndex - 1][rowIndex - 1] = {};
         } else {
-          cellData[rowIndex - 1][colIndex - 1] = { v: cell.value };
-          rowData[rowIndex - 1][colIndex - 1] = { v: cell.value };
-          columnData[colIndex - 1][rowIndex - 1] = { v: cell.value };
+          cellData[rowIndex - 1][colIndex - 1] = { v: cell.value?.toString() };
+          rowData[rowIndex - 1][colIndex - 1] = { v: cell.value?.toString() };
+          columnData[colIndex - 1][rowIndex - 1] = { v: cell.value?.toString() };
         }
       } else {
         cellData[rowIndex - 1][colIndex - 1] = {};

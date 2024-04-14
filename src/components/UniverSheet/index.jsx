@@ -2,7 +2,7 @@ import '@univerjs/design/lib/index.css';
 import '@univerjs/ui/lib/index.css';
 import '@univerjs/sheets-ui/lib/index.css';
 import '@univerjs/sheets-formula/lib/index.css';
-import { Univer, IWorkbookData } from "@univerjs/core";
+import { Univer } from "@univerjs/core";
 import { defaultTheme } from '@univerjs/design';
 import { UniverDocsPlugin } from '@univerjs/docs';
 import { UniverDocsUIPlugin } from '@univerjs/docs-ui';
@@ -22,7 +22,7 @@ const UniverSheet = () => {
   const univerRef = useRef(null);
   const workbookRef = useRef(null);
   const containerRef = useRef(null);
-  const [univeData, setUniveData] = useState < IWorkbookData > ({});
+  const [univeData, setUniveData] = useState({});
 
   const handleImportExcel = (data) => {
     // 更新组件状态以触发刷新
@@ -91,7 +91,7 @@ const UniverSheet = () => {
     };
   }, [univeData]);
 
-  return <div ref={containerRef} className="univer-container" />;
+  return <div ref={containerRef} className="univer-container" style={{ height: '100%' }} />;
 };
 
 export default UniverSheet;
