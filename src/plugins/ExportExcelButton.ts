@@ -1,31 +1,21 @@
-import {
-  ComponentManager,
-  IMenuService,
-  MenuGroup,
-  MenuItemType,
-  MenuPosition,
-} from "@univerjs/ui";
-import {
-  CommandType,
-  ICommandService,
-  IUniverInstanceService,
-  Plugin,
-} from "@univerjs/core";
+import { ComponentManager, IMenuService, MenuGroup, MenuItemType, MenuPosition, } from "@univerjs/ui";
 import { IAccessor, Inject, Injector } from "@wendellhu/redi";
 import { FolderSingle } from '@univerjs/icons';
+import * as UniverJS from "@univerjs/core";
+import * as ExcelJS from 'exceljs';
 
 /**
  * Export Excel Button Plugin
  * A simple Plugin example, show how to write a plugin.
  */
-class ExportExcelButtonPlugin extends Plugin {
+class ExportExcelButtonPlugin extends UniverJS.Plugin {
   constructor(
     // inject injector, required
     @Inject(Injector) override readonly _injector: Injector,
     // inject menu service, to add toolbar button
     @Inject(IMenuService) private menuService: IMenuService,
     // inject command service, to register command handler
-    @Inject(ICommandService) private readonly commandService: ICommandService,
+    @Inject(UniverJS.ICommandService) private readonly commandService: UniverJS.ICommandService,
     // inject component manager, to register icon component
     @Inject(ComponentManager) private readonly componentManager: ComponentManager,
   ) {
@@ -48,11 +38,11 @@ class ExportExcelButtonPlugin extends Plugin {
     this.menuService.addMenuItem(menuItem);
 
     const command = {
-      type: CommandType.OPERATION,
+      type: UniverJS.CommandType.OPERATION,
       id: buttonId,
       handler: (accessor: IAccessor) => {
         // inject univer instance service
-        const univer = accessor.get(IUniverInstanceService);
+        const univer = accessor.get(UniverJS.IUniverInstanceService);
         const univerWorkbook = univer.getCurrentUniverSheetInstance()
         const sheetMap = univerWorkbook.getWorksheets()
         sheetMap.forEach(sheet => {

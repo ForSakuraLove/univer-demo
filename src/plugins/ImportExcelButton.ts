@@ -4,9 +4,6 @@ import { IAccessor, Inject, Injector } from "@wendellhu/redi";
 import { FolderSingle } from '@univerjs/icons';
 import * as ExcelJS from 'exceljs';
 
-
-
-
 const waitUserSelectExcelFile = (
   onSelect: (workbook: ExcelJS.Workbook) => void,
 ) => {
