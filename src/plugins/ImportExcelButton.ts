@@ -393,7 +393,6 @@ const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): UniverJS.IWorkshee
         }
       }
 
-
       //字体颜色
       let cellStyleForeground: UniverJS.IColorStyle = { rgb: '#000000' }
       if (cell.style.font?.color) {
@@ -495,6 +494,7 @@ const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): UniverJS.IWorkshee
       cellData[rowIndex - 1][colIndex - 1].s = cellStyle
     }
   }
+
   const sheetData: UniverJS.IWorksheetData = {
     /**
    * Id of the worksheet. This should be unique and immutable across the lifecycle of the worksheet.
@@ -542,7 +542,6 @@ const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): UniverJS.IWorkshee
   return sheetData;
 };
 
-
 /**
  * Import Excel Button Plugin
  * A simple Plugin example, show how to write a plugin.
@@ -561,6 +560,7 @@ class ImportExcelButtonPlugin extends UniverJS.Plugin {
   ) {
     super('import-excel-plugin') // plugin id
   }
+  
   // 接收函数回调
   static setOnImportExcelCallback(callback: (data: any) => void) {
     ImportExcelButtonPlugin.onImportExcelCallback = callback;

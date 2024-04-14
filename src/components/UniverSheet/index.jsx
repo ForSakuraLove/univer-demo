@@ -2,10 +2,7 @@ import '@univerjs/design/lib/index.css';
 import '@univerjs/ui/lib/index.css';
 import '@univerjs/sheets-ui/lib/index.css';
 import '@univerjs/sheets-formula/lib/index.css';
-import './index.css';
-import {
-  Univer,
-} from "@univerjs/core";
+import { Univer, IWorkbookData } from "@univerjs/core";
 import { defaultTheme } from '@univerjs/design';
 import { UniverDocsPlugin } from '@univerjs/docs';
 import { UniverDocsUIPlugin } from '@univerjs/docs-ui';
@@ -18,7 +15,6 @@ import { UniverUIPlugin } from '@univerjs/ui';
 import { useEffect, useRef, useState } from 'react';
 import ImportExcelButtonPlugin from '../../plugins/ImportExcelButton';
 import ExportExcelButtonPlugin from '../../plugins/ExportExcelButton';
-import { MY_DATA } from '../../assets/my-data'
 
 
 // eslint-disable-next-line react/display-name
@@ -26,9 +22,7 @@ const UniverSheet = () => {
   const univerRef = useRef(null);
   const workbookRef = useRef(null);
   const containerRef = useRef(null);
-  const [univeData, setUniveData] = useState(MY_DATA);
-  const [univerInstance, setUniverInstance] = useState(null);
-  const [workbookInstance, setWorkbookInstance] = useState(null);
+  const [univeData, setUniveData] = useState < IWorkbookData > ({});
 
   const handleImportExcel = (data) => {
     // 更新组件状态以触发刷新
@@ -55,7 +49,6 @@ const UniverSheet = () => {
       theme: defaultTheme,
     });
     univerRef.current = univer;
-    setUniverInstance(univer);
     // core plugins
     univer.registerPlugin(UniverRenderEnginePlugin);
     univer.registerPlugin(UniverFormulaEnginePlugin);
