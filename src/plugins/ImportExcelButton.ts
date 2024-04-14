@@ -40,15 +40,14 @@ const waitUserSelectExcelFile = (
  * @param sheet The Excel worksheet to parse.
  * @returns An object containing information about the worksheet.
  */
-// const parseExcelUniverSheetInfo = (sheet: XLSX.WorkSheet, sheetName: string): IWorksheetData => {
 const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): UniverJS.IWorksheetData => {
   const sheetId = sheet.name;
   const name = sheet.name;
   // const type = SheetTypes.GRID;
   const rowCount = sheet.rowCount + 100;
   const columnCount = sheet.columnCount + 100;
-  const defaultColumnWidth = 60;
-  const defaultRowHeight = 27;
+  const defaultColumnWidth = 72;
+  const defaultRowHeight = 17.5;
   const scrollTop = 200;
   const scrollLeft = 100;
   const selections = ['A2'];
@@ -104,27 +103,37 @@ const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): UniverJS.IWorkshee
 
   console.log(sheet.name)
 
+  //行高
+  for (let rowIndex = 1; rowIndex <= sheet.rowCount; rowIndex++) {
+    const row = sheet.getRow(rowIndex)
+    rowData[rowIndex - 1] = { h: row.height ? row.height * (1 + 1 / 3) : undefined };
+  }
+
+  //列宽
+  for (let colIndex = 1; colIndex <= sheet.columnCount; colIndex++) {
+    const column = sheet.getColumn(colIndex)
+    columnData[colIndex - 1] = { w: column.width ? column.width * 8 : undefined };
+  }
+
   for (let rowIndex = 1; rowIndex <= sheet.rowCount; rowIndex++) {
     const row = sheet.getRow(rowIndex)
     for (let colIndex = 1; colIndex <= sheet.columnCount; colIndex++) {
       const cell = row.getCell(colIndex)
       cellData[rowIndex - 1] = cellData[rowIndex - 1] || {}
-      rowData[rowIndex - 1] = rowData[rowIndex - 1] || {};
-      columnData[colIndex - 1] = columnData[colIndex - 1] || {};
+      if (cell.model) {
+        if (cell.model.formula) {
+          cellData[rowIndex - 1][colIndex - 1] = { f: '=' + cell.model.formula, v: cell.model.result }
+          continue
+        }
+      }
       if (cell.value) {
         if (cell.isMerged && cell !== cell.master) {
           cellData[rowIndex - 1][colIndex - 1] = {};
-          rowData[rowIndex - 1][colIndex - 1] = {};
-          columnData[colIndex - 1][rowIndex - 1] = {};
         } else {
           cellData[rowIndex - 1][colIndex - 1] = { v: cell.value?.toString() };
-          rowData[rowIndex - 1][colIndex - 1] = { v: cell.value?.toString() };
-          columnData[colIndex - 1][rowIndex - 1] = { v: cell.value?.toString() };
         }
       } else {
         cellData[rowIndex - 1][colIndex - 1] = {};
-        rowData[rowIndex - 1][colIndex - 1] = {};
-        columnData[colIndex - 1][rowIndex - 1] = {};
       }
 
       //没有样式
@@ -133,8 +142,7 @@ const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): UniverJS.IWorkshee
       }
 
       let cellStyle: UniverJS.IStyleData = {}
-      console.log(cell.$col$row)
-      console.log(cell.style)
+
       //字体名字，如宋体
       if (cell.style.font?.name) {
         cellStyle.ff = cell.style.font?.name
@@ -186,7 +194,6 @@ const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): UniverJS.IWorkshee
           if (cell.style.fill.fgColor?.argb) {
             // const argb = cell.style.fill.fgColor.argb
             // cellStyleBackground.rgb = '#' + argb.slice(-6);
-            console.log(cellStyleBackground)
           }
         }
       }
