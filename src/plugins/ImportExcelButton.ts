@@ -142,12 +142,13 @@ const parseExcelUniverSheetInfo = (sheet: ExcelJS.Worksheet): UniverJS.IWorkshee
 
       //字体名字，如宋体
       if (cell.style.font?.name) {
-        cellStyle.ff = cell.style.font?.name
+        console.log(cell.style.font.name)
+        cellStyle.ff = cell.style.font.name
       }
 
       //字体大小
       if (cell.style.font?.size) {
-        cellStyle.fs = cell.style.font?.size
+        cellStyle.fs = cell.style.font.size
       }
 
       //字体斜体
